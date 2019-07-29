@@ -77,9 +77,11 @@ int main(int argc, char *argv[]) {
     // Get the stack limit 
    getrlimit (RLIMIT_STACK, &rl); 
   
-   // Change the time limit 
-   rl.rlim_max = RLIM_INFINITY;
-   rl.rlim_cur = RLIM_INFINITY; 
+    // printf("\n Default value is : %lld\n", (long long int)rl.rlim_cur); 
+   // Change the stack limit 
+   // tried 100000000 * sizeof(int) but it caused seg dump
+   rl.rlim_max = 400000000 * sizeof(int);
+   rl.rlim_cur = 400000000 * sizeof(int); 
   
    // Now call setrlimit() to set the  
    // changed value. 
@@ -88,6 +90,7 @@ int main(int argc, char *argv[]) {
    // Again get the limit and check 
    getrlimit (RLIMIT_STACK, &rl); 
 
+//    printf("\n Default value now is : %lld\n", (long long int)rl.rlim_cur); 
 	if (argc < 2) {
 		size = SIZE;
 	} else {
