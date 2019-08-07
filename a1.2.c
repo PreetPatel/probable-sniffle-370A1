@@ -15,6 +15,7 @@
 #include <string.h>
 #include <sys/resource.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #define SIZE    2
 
@@ -45,7 +46,10 @@ void merge(struct block *left, struct block *right) {
 }
 
 /* Merge sort the data. */
-void merge_sort(struct block *my_data) {
+// Modified the headers of this function to conform with the requirements of the thread creation
+void *merge_sort(void *ptr) {
+    struct block *my_data = (struct block*)ptr;
+
     // print_block_data(my_data);
     if (my_data->size > 1) {
         struct block left_block;
@@ -54,8 +58,38 @@ void merge_sort(struct block *my_data) {
         left_block.first = my_data->first;
         right_block.size = left_block.size + (my_data->size % 2);
         right_block.first = my_data->first + left_block.size;
+
         merge_sort(&left_block);
         merge_sort(&right_block);
+        merge(&left_block, &right_block);
+    }
+}
+
+/* Threaded Merge Sort function that creates the two threads */
+void *init_merge_sort(void *ptr) {
+    struct block *my_data = (struct block*)ptr;
+
+    // print_block_data(my_data);
+    if (my_data->size > 1) {
+        struct block left_block;
+        struct block right_block;
+        left_block.size = my_data->size / 2;
+        left_block.first = my_data->first;
+        right_block.size = left_block.size + (my_data->size % 2);
+        right_block.first = my_data->first + left_block.size;
+
+        pthread_t leftThread, rightThread;
+        pthread_attr_t attributesForThread;
+        size_t size = 100000000 * sizeof(int);
+        pthread_attr_init(&attributesForThread);
+        int ret = pthread_attr_setstacksize(&attributesForThread,size);
+        // printf("%d \n", ret);
+
+        pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
+        pthread_create(&rightThread, &attributesForThread, merge_sort, &right_block); 
+        pthread_join(leftThread, NULL); 
+        pthread_join(rightThread, NULL); 
+        
         merge(&left_block, &right_block);
     }
 }
@@ -79,8 +113,8 @@ int main(int argc, char *argv[]) {
   
     // printf("\n Default value is : %lld\n", (long long int)rl.rlim_cur); 
    // Change the stack limit 
-
-   rl.rlim_cur = (400000000 * sizeof(int)); 
+   // tried 100000000 * sizeof(int) but it caused seg dump
+   rl.rlim_cur = 1000000000; 
   
    // Now call setrlimit() to set the  
    // changed value. 
@@ -95,6 +129,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		size = atol(argv[1]);
 	}
+
     struct block start_block;
     int data[size];
     start_block.size = size;
@@ -104,7 +139,7 @@ int main(int argc, char *argv[]) {
     }
 
     printf("starting---\n");
-    merge_sort(&start_block);
+    init_merge_sort(&start_block);
     printf("---ending\n");
     printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
     exit(EXIT_SUCCESS);
