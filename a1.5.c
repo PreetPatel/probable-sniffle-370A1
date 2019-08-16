@@ -19,7 +19,8 @@
 
 #define SIZE    2
 long number_of_processors = 0;
-pthread_mutex_t lock;
+pthread_spinlock_t lock;
+int pshared;
 
 struct block {
     int size;
@@ -68,12 +69,12 @@ void *merge_sort(void *ptr) {
         int ret = pthread_attr_setstacksize(&attributesForThread,size);
         
         // Get lock on mutex to change counter
-        pthread_mutex_lock(&lock);
+        pthread_spin_lock(&lock);
         if (number_of_processors >= 2) {
             
             pthread_t leftThread, rightThread;
             number_of_processors = number_of_processors - 1;
-            pthread_mutex_unlock(&lock);
+            pthread_spin_unlock(&lock);
 
             pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
             pthread_create(&rightThread, &attributesForThread, merge_sort, &right_block); 
@@ -81,15 +82,15 @@ void *merge_sort(void *ptr) {
             pthread_join(rightThread, NULL); 
             //merge(&left_block, &right_block);
             
-            pthread_mutex_lock(&lock);
+            pthread_spin_lock(&lock);
             number_of_processors = number_of_processors + 1;
-            pthread_mutex_unlock(&lock);
+            pthread_spin_unlock(&lock);
 
         } else if (number_of_processors >= 1) {
             
             pthread_t leftThread; 
             number_of_processors = number_of_processors - 1;
-            pthread_mutex_unlock(&lock);
+            pthread_spin_unlock(&lock);
 
             pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
             
@@ -97,12 +98,12 @@ void *merge_sort(void *ptr) {
             merge_sort(&right_block);
             //merge(&left_block, &right_block);
             
-            pthread_mutex_lock(&lock);
+            pthread_spin_lock(&lock);
             number_of_processors = number_of_processors + 1;
-            pthread_mutex_unlock(&lock);
+            pthread_spin_unlock(&lock);
 
         } else {
-            pthread_mutex_unlock(&lock);
+            pthread_spin_unlock(&lock);
             // printf("No cores fuck");
             merge_sort(&left_block);
             merge_sort(&right_block);
@@ -136,18 +137,18 @@ void *init_merge_sort(void *ptr) {
         int ret = pthread_attr_setstacksize(&attributesForThread,size);
         // printf("%d \n", ret);
 
-        pthread_mutex_lock(&lock);
+        pthread_spin_lock(&lock);
         number_of_processors = number_of_processors - 1;
-        pthread_mutex_unlock(&lock);
+        pthread_spin_unlock(&lock);
 
         pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
         pthread_create(&rightThread, &attributesForThread, merge_sort, &right_block); 
         pthread_join(leftThread, NULL); 
         pthread_join(rightThread, NULL); 
 
-        pthread_mutex_lock(&lock);
+        pthread_spin_lock(&lock);
         number_of_processors = number_of_processors + 1;
-        pthread_mutex_unlock(&lock);
+        pthread_spin_unlock(&lock);
         
         merge(&left_block, &right_block);
     }
@@ -171,8 +172,8 @@ int main(int argc, char *argv[]) {
     number_of_processors = sysconf(_SC_NPROCESSORS_ONLN);
 
     // Initialise mutex for counter locking
-    if (pthread_mutex_init(&lock, NULL) != 0) { 
-        printf("There was an error initialising the mutex for counter. \n"); 
+    if (pthread_spin_init(&lock, pshared) != 0) { 
+        printf("There was an error initialising the spinlock for counter. \n"); 
         return 1; 
     } 
 
