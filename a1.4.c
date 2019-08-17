@@ -61,9 +61,8 @@ void *merge_sort(void *ptr) {
         right_block.size = left_block.size + (my_data->size % 2);
         right_block.first = my_data->first + left_block.size;
 
-
         pthread_attr_t attributesForThread;
-        size_t size = 100000000 * sizeof(int);
+        size_t size = 2 * right_block.size * sizeof(int);
         pthread_attr_init(&attributesForThread);
         int ret = pthread_attr_setstacksize(&attributesForThread,size);
         
@@ -78,7 +77,7 @@ void *merge_sort(void *ptr) {
             pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
             merge_sort(&right_block);
             pthread_join(leftThread, NULL); 
-            //merge(&left_block, &right_block);
+            merge(&left_block, &right_block);
             
             pthread_mutex_lock(&lock);
             number_of_processors = number_of_processors + 1;
@@ -89,51 +88,10 @@ void *merge_sort(void *ptr) {
             // printf("No cores fuck");
             merge_sort(&left_block);
             merge_sort(&right_block);
-            
+            merge(&left_block, &right_block);
         }
-
-
-        // merge_sort(&left_block);
-        // merge_sort(&right_block);
-        merge(&left_block, &right_block);
     }
 }
-
-// /* Threaded Merge Sort function that creates the two threads */
-// void *init_merge_sort(void *ptr) {
-//     struct block *my_data = (struct block*)ptr;
-
-//     // print_block_data(my_data);
-//     if (my_data->size > 1) {
-//         struct block left_block;
-//         struct block right_block;
-//         left_block.size = my_data->size / 2;
-//         left_block.first = my_data->first;
-//         right_block.size = left_block.size + (my_data->size % 2);
-//         right_block.first = my_data->first + left_block.size;
-
-//         pthread_t leftThread;
-//         pthread_attr_t attributesForThread;
-//         size_t size = 100000000 * sizeof(int);
-//         pthread_attr_init(&attributesForThread);
-//         int ret = pthread_attr_setstacksize(&attributesForThread,size);
-//         // printf("%d \n", ret);
-
-//         pthread_mutex_lock(&lock);
-//         number_of_processors = number_of_processors - 1;
-//         pthread_mutex_unlock(&lock);
-
-//         pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
-//         merge_sort(&right_block);
-//         pthread_join(leftThread, NULL); 
-
-//         merge(&left_block, &right_block);
-        
-//         pthread_mutex_lock(&lock);
-//         number_of_processors = number_of_processors + 1;
-//         pthread_mutex_unlock(&lock);
-//     }
-// }
 
 /* Check to see if the data is sorted. */
 bool is_sorted(int data[], int size) {
