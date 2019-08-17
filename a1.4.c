@@ -2,8 +2,8 @@
     The Merge Sort to use for Operating Systems Assignment 1 2019
     written by Robert Sheehan
 
-    Modified by: put your name here
-    UPI: put your login here
+    Modified by: Preet Patel
+    UPI: put ppat504
 
     By submitting a program you are claiming that you and only you have made
     adjustments and additions to this code.
@@ -69,32 +69,15 @@ void *merge_sort(void *ptr) {
         
         // Get lock on mutex to change counter
         pthread_mutex_lock(&lock);
-        if (number_of_processors >= 2) {
-            
-            pthread_t leftThread, rightThread;
-            number_of_processors = number_of_processors - 1;
-            pthread_mutex_unlock(&lock);
-
-            pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
-            pthread_create(&rightThread, &attributesForThread, merge_sort, &right_block); 
-            pthread_join(leftThread, NULL); 
-            pthread_join(rightThread, NULL); 
-            //merge(&left_block, &right_block);
-            
-            pthread_mutex_lock(&lock);
-            number_of_processors = number_of_processors + 1;
-            pthread_mutex_unlock(&lock);
-
-        } else if (number_of_processors >= 1) {
+        if (number_of_processors >= 1) {
             
             pthread_t leftThread; 
             number_of_processors = number_of_processors - 1;
             pthread_mutex_unlock(&lock);
 
             pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
-            
-            pthread_join(leftThread, NULL); 
             merge_sort(&right_block);
+            pthread_join(leftThread, NULL); 
             //merge(&left_block, &right_block);
             
             pthread_mutex_lock(&lock);
@@ -116,42 +99,41 @@ void *merge_sort(void *ptr) {
     }
 }
 
-/* Threaded Merge Sort function that creates the two threads */
-void *init_merge_sort(void *ptr) {
-    struct block *my_data = (struct block*)ptr;
+// /* Threaded Merge Sort function that creates the two threads */
+// void *init_merge_sort(void *ptr) {
+//     struct block *my_data = (struct block*)ptr;
 
-    // print_block_data(my_data);
-    if (my_data->size > 1) {
-        struct block left_block;
-        struct block right_block;
-        left_block.size = my_data->size / 2;
-        left_block.first = my_data->first;
-        right_block.size = left_block.size + (my_data->size % 2);
-        right_block.first = my_data->first + left_block.size;
+//     // print_block_data(my_data);
+//     if (my_data->size > 1) {
+//         struct block left_block;
+//         struct block right_block;
+//         left_block.size = my_data->size / 2;
+//         left_block.first = my_data->first;
+//         right_block.size = left_block.size + (my_data->size % 2);
+//         right_block.first = my_data->first + left_block.size;
 
-        pthread_t leftThread, rightThread;
-        pthread_attr_t attributesForThread;
-        size_t size = 100000000 * sizeof(int);
-        pthread_attr_init(&attributesForThread);
-        int ret = pthread_attr_setstacksize(&attributesForThread,size);
-        // printf("%d \n", ret);
+//         pthread_t leftThread;
+//         pthread_attr_t attributesForThread;
+//         size_t size = 100000000 * sizeof(int);
+//         pthread_attr_init(&attributesForThread);
+//         int ret = pthread_attr_setstacksize(&attributesForThread,size);
+//         // printf("%d \n", ret);
 
-        pthread_mutex_lock(&lock);
-        number_of_processors = number_of_processors - 1;
-        pthread_mutex_unlock(&lock);
+//         pthread_mutex_lock(&lock);
+//         number_of_processors = number_of_processors - 1;
+//         pthread_mutex_unlock(&lock);
 
-        pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
-        pthread_create(&rightThread, &attributesForThread, merge_sort, &right_block); 
-        pthread_join(leftThread, NULL); 
-        pthread_join(rightThread, NULL); 
+//         pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
+//         merge_sort(&right_block);
+//         pthread_join(leftThread, NULL); 
 
-        pthread_mutex_lock(&lock);
-        number_of_processors = number_of_processors + 1;
-        pthread_mutex_unlock(&lock);
+//         merge(&left_block, &right_block);
         
-        merge(&left_block, &right_block);
-    }
-}
+//         pthread_mutex_lock(&lock);
+//         number_of_processors = number_of_processors + 1;
+//         pthread_mutex_unlock(&lock);
+//     }
+// }
 
 /* Check to see if the data is sorted. */
 bool is_sorted(int data[], int size) {
@@ -171,7 +153,7 @@ int main(int argc, char *argv[]) {
     number_of_processors = sysconf(_SC_NPROCESSORS_ONLN);
 
     // Initialise mutex for counter locking
-    if (pthread_mutex_init(&lock, NULL) != 0) { 
+    if (pthread_mutex_init(&lock, PTHREAD_MUTEX_DEFAULT) != 0) { 
         printf("There was an error initialising the mutex for counter. \n"); 
         return 1; 
     } 
@@ -207,7 +189,7 @@ int main(int argc, char *argv[]) {
     }
 
     printf("starting---\n");
-    init_merge_sort(&start_block);
+    merge_sort(&start_block);
     printf("---ending\n");
     printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
     exit(EXIT_SUCCESS);
