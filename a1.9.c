@@ -18,7 +18,6 @@
 #include <pthread.h>
 #include<sys/wait.h> 
 #include <sys/mman.h>
-#include <errno.h>
 
 #define SIZE    2
 static int *number_of_processors;
@@ -46,26 +45,6 @@ void merge(struct block *left, struct block *right) {
     memmove(left->first, combined, (left->size + right->size) * sizeof(int));
 }
 
-/* Merge sort the data. */
-// Modified the headers of this function to conform with the requirements of the thread creation
-void *merge_sort(void *ptr) {
-    struct block *my_data = (struct block*)ptr;
-
-    // print_block_data(my_data);
-    if (my_data->size > 1) {
-        struct block left_block;
-        struct block right_block;
-        left_block.size = my_data->size / 2;
-        left_block.first = my_data->first;
-        right_block.size = left_block.size + (my_data->size % 2);
-        right_block.first = my_data->first + left_block.size;
-
-        merge_sort(&left_block);
-        merge_sort(&right_block);
-        merge(&left_block, &right_block);
-    }
-}
-
 /* Threaded Merge Sort function that creates the two threads */
 void *init_merge_sort(void *ptr) {
     struct block *my_data = (struct block*)ptr;
@@ -74,6 +53,7 @@ void *init_merge_sort(void *ptr) {
     if (my_data->size > 1) {
         struct block left_block;
         struct block right_block;
+
         left_block.size = my_data->size / 2;
         left_block.first = my_data->first;
         right_block.size = left_block.size + (my_data->size % 2);
@@ -81,32 +61,17 @@ void *init_merge_sort(void *ptr) {
 
         pthread_spin_lock(lock);
         if (*number_of_processors >= 1) {
-            int fd[2];
-            int result;
-            // creating pipe
-            if ((result = pipe(fd)) < 0) {
-                fprintf(stderr, "Pipe creation failed: Error: %d\n", result);
-                printf("EFAULT: %d, EINVAL: %d, EMFILE: %d, ENFILE: %d\n", EFAULT, EINVAL, EMFILE, ENFILE);
-                printf("actual error: %d\n", errno);
-                exit(EXIT_FAILURE);
-            }
             int left_sort_pid, right_sort_pid;
-
             *number_of_processors = *number_of_processors - 1;
             pthread_spin_unlock(lock);
 
             left_sort_pid = fork();
-            if (left_sort_pid == 0) {
-                close(fd[0]); // close read end of left pipe
-                init_merge_sort(&left_block);
-                write(fd[1], left_block.first, left_block.size * sizeof(int)); // write bits of left block to left pipe
-                close(fd[1]);
+            if (left_sort_pid == 0) { 
+                init_merge_sort(&left_block);      
                 exit(0);
             } else {
-                close(fd[1]); // close write end of left pipe
                 init_merge_sort(&right_block); 
-                read(fd[0], left_block.first, left_block.size * sizeof(int)); // read left block from left pipe
-                close(fd[0]);
+                wait(NULL); // wait for child process to complete
                 merge(&left_block, &right_block);
 
                 // Parent process increments process counter
@@ -120,7 +85,6 @@ void *init_merge_sort(void *ptr) {
             init_merge_sort(&right_block);
             merge(&left_block, &right_block);
         } 
-        
     }
 }
 
@@ -174,7 +138,9 @@ int main(int argc, char *argv[]) {
 	}
 
     struct block start_block;
-    int data[size];
+    int *data;
+    data = mmap(NULL, sizeof(int) * size, PROT_READ | PROT_WRITE, 
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     start_block.size = size;
     start_block.first = data;
     for (int i = 0; i < size; i++) {
