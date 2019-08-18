@@ -74,12 +74,14 @@ void *init_merge_sort(void *ptr) {
             } else {
                 init_merge_sort(&right_block); 
                 wait(NULL); // wait for child process to complete
-                merge(&left_block, &right_block);
 
                 // Parent process increments process counter
                 pthread_spin_lock(lock);
                 *number_of_processors = *number_of_processors + 1;
                 pthread_spin_unlock(lock);
+                
+                merge(&left_block, &right_block);
+
             }
         } else {
             pthread_spin_unlock(lock);
