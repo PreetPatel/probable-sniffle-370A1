@@ -30,9 +30,9 @@ fi
 
 for i in {1..9}; do
     if [ -e "a1.$i.c" ]; then
-        gc -pthread -o "a1.$i" "a1.$i.c" -lm
+        cc -pthread -o "a1.$i" "a1.$i.c" -lm
         if [ $? -ne 0 ]; then
-            printf "gc threw an error on task $i, ignoring. \n"
+            printf "cc threw an error on task $i, ignoring. \n"
         fi
     fi
 done
@@ -42,7 +42,7 @@ bonus=0
 if [ -e "a1.bonus.c" ]; then
     cc -pthread -o "a1.bonus" "a1.bonus.c" -lm
     if [ $? -ne 0 ]; then
-        printf "gc error trying to compile bonus task\n"
+        printf "cc error trying to compile bonus task\n"
         bonus=1
     fi
 else
