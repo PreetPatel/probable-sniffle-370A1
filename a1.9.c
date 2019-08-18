@@ -59,9 +59,11 @@ void *init_merge_sort(void *ptr) {
         right_block.size = left_block.size + (my_data->size % 2);
         right_block.first = my_data->first + left_block.size;
 
-        pthread_spin_lock(lock);
+        
         if (*number_of_processors >= 1) {
             int left_sort_pid, right_sort_pid;
+
+            pthread_spin_lock(lock);
             *number_of_processors = *number_of_processors - 1;
             pthread_spin_unlock(lock);
 
@@ -80,7 +82,6 @@ void *init_merge_sort(void *ptr) {
                 pthread_spin_unlock(lock);
             }
         } else {
-            pthread_spin_unlock(lock);
             init_merge_sort(&left_block);
             init_merge_sort(&right_block);
             merge(&left_block, &right_block);
