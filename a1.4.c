@@ -67,10 +67,11 @@ void *merge_sort(void *ptr) {
         int ret = pthread_attr_setstacksize(&attributesForThread,size);
         
         // Get lock on mutex to change counter
-        pthread_mutex_lock(&lock);
+        
         if (number_of_processors >= 1) {
             
             pthread_t leftThread; 
+            pthread_mutex_lock(&lock);
             number_of_processors = number_of_processors - 1;
             pthread_mutex_unlock(&lock);
 
@@ -84,7 +85,6 @@ void *merge_sort(void *ptr) {
             pthread_mutex_unlock(&lock);
 
         } else {
-            pthread_mutex_unlock(&lock);
             // printf("No cores fuck");
             merge_sort(&left_block);
             merge_sort(&right_block);
