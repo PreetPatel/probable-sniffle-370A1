@@ -71,7 +71,7 @@ void *merge_sort(void *ptr) {
         if (number_of_processors >= 1) {
             
             pthread_mutex_lock(&lock);
-            number_of_processors = number_of_processors - 1;
+            number_of_processors--;
             pthread_mutex_unlock(&lock);
 
             pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
@@ -83,7 +83,7 @@ void *merge_sort(void *ptr) {
             merge(&left_block, &right_block);
 
             pthread_mutex_lock(&lock);
-            number_of_processors = number_of_processors + 1;
+            number_of_processors++;
             pthread_mutex_unlock(&lock);
 
         } else {
