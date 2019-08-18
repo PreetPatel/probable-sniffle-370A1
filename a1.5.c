@@ -80,11 +80,12 @@ void *merge_sort(void *ptr) {
             pthread_create(&rightThread, &attributesForThread, merge_sort, &right_block); 
             pthread_join(leftThread, NULL); 
             pthread_join(rightThread, NULL); 
-            merge(&left_block, &right_block);
             
             pthread_spin_lock(&lock);
             number_of_processors++;
             pthread_spin_unlock(&lock);
+            
+            merge(&left_block, &right_block);
 
         }  else {
             merge_sort(&left_block);

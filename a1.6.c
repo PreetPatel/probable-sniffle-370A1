@@ -79,6 +79,7 @@ void *init_merge_sort(void *ptr) {
         // creating pipe
         if (pipe(fd) < 0) {
             fprintf(stderr, "Pipe creation failed");
+            exit(1);
         }
         int left_sort_pid, right_sort_pid;
 
