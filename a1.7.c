@@ -46,28 +46,8 @@ void merge(struct block *left, struct block *right) {
     memmove(left->first, combined, (left->size + right->size) * sizeof(int));
 }
 
-/* Merge sort the data. */
-// Modified the headers of this function to conform with the requirements of the thread creation
-void *merge_sort(void *ptr) {
-    struct block *my_data = (struct block*)ptr;
-
-    // print_block_data(my_data);
-    if (my_data->size > 1) {
-        struct block left_block;
-        struct block right_block;
-        left_block.size = my_data->size / 2;
-        left_block.first = my_data->first;
-        right_block.size = left_block.size + (my_data->size % 2);
-        right_block.first = my_data->first + left_block.size;
-
-        merge_sort(&left_block);
-        merge_sort(&right_block);
-        merge(&left_block, &right_block);
-    }
-}
-
 /* Threaded Merge Sort function that creates the two threads */
-void *init_merge_sort(void *ptr) {
+void *merge_sort(void *ptr) {
     struct block *my_data = (struct block*)ptr;
 
     // print_block_data(my_data);
@@ -98,13 +78,13 @@ void *init_merge_sort(void *ptr) {
             left_sort_pid = fork();
             if (left_sort_pid == 0) {
                 close(fd[0]); // close read end of left pipe
-                init_merge_sort(&left_block);
+                merge_sort(&left_block);
                 write(fd[1], left_block.first, left_block.size * sizeof(int)); // write bits of left block to left pipe
                 close(fd[1]);
                 exit(0);
             } else {
                 close(fd[1]); // close write end of left pipe
-                init_merge_sort(&right_block); 
+                merge_sort(&right_block); 
                 read(fd[0], left_block.first, left_block.size * sizeof(int)); // read left block from left pipe
                 close(fd[0]);
                 merge(&left_block, &right_block);
@@ -116,8 +96,8 @@ void *init_merge_sort(void *ptr) {
             }
         } else {
             pthread_spin_unlock(lock);
-            init_merge_sort(&left_block);
-            init_merge_sort(&right_block);
+            merge_sort(&left_block);
+            merge_sort(&right_block);
             merge(&left_block, &right_block);
         } 
         
@@ -182,7 +162,7 @@ int main(int argc, char *argv[]) {
     }
 
     printf("starting---\n");
-    init_merge_sort(&start_block);
+    merge_sort(&start_block);
     printf("---ending\n");
     printf(is_sorted(data, size) ? "sorted\n" : "not sorted\n");
     exit(EXIT_SUCCESS);

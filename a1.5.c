@@ -69,10 +69,11 @@ void *merge_sort(void *ptr) {
         int ret = pthread_attr_setstacksize(&attributesForThread,size);
         
         // Get lock on mutex to change counter
-        pthread_spin_lock(&lock);
+        
         if (number_of_processors >= 1) {
             
             pthread_t leftThread, rightThread;
+            pthread_spin_lock(&lock);
             number_of_processors--;
             pthread_spin_unlock(&lock);
 
@@ -80,19 +81,18 @@ void *merge_sort(void *ptr) {
             pthread_create(&rightThread, &attributesForThread, merge_sort, &right_block); 
             pthread_join(leftThread, NULL); 
             pthread_join(rightThread, NULL); 
-            //merge(&left_block, &right_block);
+            merge(&left_block, &right_block);
             
             pthread_spin_lock(&lock);
             number_of_processors++;
             pthread_spin_unlock(&lock);
 
         }  else {
-            pthread_spin_unlock(&lock);
             merge_sort(&left_block);
             merge_sort(&right_block);
-            
+            merge(&left_block, &right_block);
         }
-        merge(&left_block, &right_block);
+        
     }
 }
 
