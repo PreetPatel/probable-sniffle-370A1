@@ -21,8 +21,8 @@
 #include <errno.h>
 
 #define SIZE    2
-static int *number_of_processors;
-static pthread_spinlock_t *lock;
+static int* number_of_processors;
+static pthread_spinlock_t* lock;
 
 struct block {
     int size;
