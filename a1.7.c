@@ -61,19 +61,17 @@ void *merge_sort(void *ptr) {
 
         pthread_spin_lock(lock);
         if (*number_of_processors >= 1) {
+
+            *number_of_processors = *number_of_processors - 1;
+            pthread_spin_unlock(lock);
+
             int fd[2];
-            int result;
             // creating pipe
-            if ((result = pipe(fd)) < 0) {
-                fprintf(stderr, "Pipe creation failed: Error: %d\n", result);
-                printf("EFAULT: %d, EINVAL: %d, EMFILE: %d, ENFILE: %d\n", EFAULT, EINVAL, EMFILE, ENFILE);
-                printf("actual error: %d\n", errno);
+            if ((pipe(fd)) < 0) {
+                fprintf(stderr, "Pipe creation failed: Error %d\n");
                 exit(EXIT_FAILURE);
             }
             int left_sort_pid, right_sort_pid;
-            
-            *number_of_processors = *number_of_processors - 1;
-            pthread_spin_unlock(lock);
 
             left_sort_pid = fork();
             if (left_sort_pid == 0) {

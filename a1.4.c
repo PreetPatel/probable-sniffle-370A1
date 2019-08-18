@@ -68,15 +68,14 @@ void *merge_sort(void *ptr) {
         
         pthread_t leftThread, rightThread; 
 
+        pthread_mutex_lock(&lock);
         if (number_of_processors >= 1) {
             
-            pthread_mutex_lock(&lock);
             number_of_processors--;
             pthread_mutex_unlock(&lock);
 
             pthread_create(&leftThread, &attributesForThread, merge_sort, &left_block); 
             pthread_create(&rightThread, &attributesForThread, merge_sort, &right_block); 
-            // merge_sort(&right_block);
             
             pthread_join(leftThread, NULL); 
             pthread_join(rightThread, NULL); 
@@ -87,6 +86,7 @@ void *merge_sort(void *ptr) {
             pthread_mutex_unlock(&lock);
 
         } else {
+            pthread_mutex_unlock(&lock);
             merge_sort(&left_block);
             merge_sort(&right_block);
             merge(&left_block, &right_block);
