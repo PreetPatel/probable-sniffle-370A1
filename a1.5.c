@@ -20,7 +20,6 @@
 #define SIZE    2
 long number_of_processors = 0;
 pthread_spinlock_t lock;
-int pshared;
 
 struct block {
     int size;
@@ -114,7 +113,7 @@ int main(int argc, char *argv[]) {
     number_of_processors = sysconf(_SC_NPROCESSORS_ONLN);
 
     // Initialise mutex for counter locking
-    if (pthread_spin_init(&lock, pshared) != 0) { 
+    if (pthread_spin_init(&lock, PTHREAD_PROCESS_SHARED) != 0) { 
         printf("There was an error initialising the spinlock for counter. \n"); 
         return 1; 
     } 
