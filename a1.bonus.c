@@ -65,7 +65,7 @@ void *merge_sort(void *ptr) {
     }
 }
 
-/* Threaded Merge Sort function that creates the two threads */
+/* Threaded Merge Sort function that creates additiona two threads */
 void *init_merge_sort(void *ptr) {
     struct block *my_data = (struct block*)ptr;
 
@@ -94,7 +94,7 @@ void *init_merge_sort(void *ptr) {
     }
 }
 
-/* Threaded Merge Sort function that creates the two threads */
+/* Threaded Merge Sort function that creates the first two threads */
 void *init_twice_merge_sort(void *ptr) {
     struct block *my_data = (struct block*)ptr;
 
